@@ -16,14 +16,17 @@ ZabbixDataDict = {}
 def GetRdsList():
     RdsRequest = DescribeDBInstancesRequest.DescribeDBInstancesRequest()
     RdsRequest.set_accept_format('json')
+    RdsRequest.set_PageSize(100)   # 每页实例条数
+    RdsRequest.set_PageNumber(1)    # 第几页
     #RdsInfo = clt.do_action(RdsRequest)
     RdsInfo = clt.do_action_with_exception(RdsRequest)
     for RdsInfoJson in (json.loads(RdsInfo))['Items']['DBInstance']:
         DBInstanceIdDict = {}
         try:
-            DBInstanceIdDict["{#DBINSTANCEID}"] = RdsInfoJson['DBInstanceId']
-            DBInstanceIdDict["{#DBINSTANCEDESCRIPTION}"] = RdsInfoJson['DBInstanceDescription']
-            DBInstanceIdList.append(DBInstanceIdDict)
+            if 'prod' in RdsInfoJson['DBInstanceDescription']: # 筛选别名里带 prod 字符的
+                DBInstanceIdDict["{#DBINSTANCEID}"] = RdsInfoJson['DBInstanceId']
+                DBInstanceIdDict["{#DBINSTANCEDESCRIPTION}"] = RdsInfoJson['DBInstanceDescription']
+                DBInstanceIdList.append(DBInstanceIdDict)
         except Exception, e:
             print Exception, ":", e
             print "Please check the RDS alias !Alias must not be the same as DBInstanceId！！！"
